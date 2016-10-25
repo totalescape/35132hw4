@@ -10,31 +10,31 @@ function main()
 
     sigma=.3;	% Volatility
 
-    Su=2;    	% Upper Bound in price grid
+    %%TBD
+    Su=100;    	% Upper Bound in price grid
     Sb=.00001;  % Lower Bound in price grid. Not = 0 to avoid S=0 in Black-Scholes Formula
 
     % =============
     % Interest rate and Dividend Yield
     % =============
 
-    r=.03;
-    D=.04;
+    r=log(1.0577);
+    D=0.0;
 
     % =======
     % Options
     % =======
 
-    T=1;	% Time to Maturity
-    K=1;	% Strike Price
-    KC=.8;
-    KP=1.2;
+    T=5;	% Time to Maturity
+    KC=20; 
+    
 
     % ===========
     % Grid set up
     % ===========
 
-    n=100; % number of points on the grid (including first and last)
-    I=35;  % number of points on the grid (including first and last)
+    n=2*252*5; % number of points on the grid (including first and last). use daily
+    I=Su*100;  % number of points on the grid (including first and last). 
 
 
     % ================
@@ -61,6 +61,7 @@ function main()
     Gamma=zeros(I,n);
     %VP=zeros(I,n);
     VC=zeros(I,n);
+    VStruc=zeros(I,n);
 
     BB=NaN*ones(I,n);
     EP=zeros(I,n);
@@ -75,6 +76,7 @@ function main()
 
        %VP(i,1)=max(KP-SS(i),0);
        VC(i,1)=max(SS(i)-KC,0);
+       VStruc=max(66.9*(SS(i)-KC),1338);
     end
 
 
@@ -89,6 +91,7 @@ function main()
         %V(1,k)=KP;   %*exp(-r*(k-1)*dt);
         %VP(1,k)=KP;
         VC(1,k)=0;
+        VStruc(1,k)= 1338 * exp(-r*(k-1)*dt);
     end
 
        % Over k for i=I
@@ -104,6 +107,7 @@ function main()
         %V(I,k)=SS(I)-KC;
         %VP(I,k)=0;
         VC(I,k)=SS(I)-KC;
+        VStruc(I,k)=66.9*(SS(i)-KC);
     end
 
 
@@ -128,7 +132,17 @@ function main()
             %ER(i,k)=A*VP(i-1,k-1)+(1+B)*VP(i,k-1)+C*VP(i+1,k-1);
             %V(i,k)=max(max(A*V(i-1,k-1)+(1+B)*V(i,k-1)+C*V(i+1,k-1),KP-SS(i)),SS(i)-KC);         
             %VP(i,k)=max(A*VP(i-1,k-1)+(1+B)*VP(i,k-1)+C*VP(i+1,k-1),KP-SS(i));
+
             VC(i,k)=max(A*VC(i-1,k-1)+(1+B)*VC(i,k-1)+C*VC(i+1,k-1),SS(i)-KC);
+            VStruc(i,k)=max(A*VStruc(i-1,k-1)+(1+B)*VStruc(i,k-1)+C*VStruc(i+1,k-1),66.9*(SS(i)-KC));
+            
+            if ((VC(i,k) - VC(i,k-1)) / VC(i,k-1) > 0.5 && VC(i,k) > 5)
+                %VC(i-1,k-1)
+                %VC(i,k-1)
+                %VC(i+1,k-1)
+                %VC(i,k)
+                %VC(i,k-1)
+            end
 
             %if VP(i,k)==KP-SS(i)
             %   BB(i,k)=1;
