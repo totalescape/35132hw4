@@ -37,9 +37,9 @@ KC=20;	% Strike Price
 
 
 
-dt =1/50;
+dt =1/252;
 N=T/dt;
-NSim=20000;
+NSim=100000;
 
 
 % Implementation
