@@ -28,7 +28,7 @@ D=0.0;
 % =======
 
 T=5;	% Time to Maturity
-KC=20;	% Strike Price
+%KC=20;	% Strike Price
 
 
 % ===========
@@ -39,7 +39,7 @@ KC=20;	% Strike Price
 
 dt =1/252;
 N=T/dt;
-NSim=100000;
+NSim=10000;
 
 
 % Implementation
@@ -76,7 +76,7 @@ NSim=size(SSit,1);
 %N=N+1;
 
 MM=NaN*ones(NSim,N);
-MM(:,N)=max(SSit(:,N)-KC,0);
+MM(:,N)=max(SSit(:,N)-ConPx(:,end),0);
 figure
 for tt=N:-1:3; 
    disp('Time to Maturity')
@@ -84,7 +84,7 @@ for tt=N:-1:3;
    
    % Step 1: Select the path in the money at time tt-1
    
-   I=find(SSit(:,tt-1)-KC>0);
+   I=find(SSit(:,tt-1)-ConPx(:,tt-1)>0);
    ISize=length(I);
    
    % Step 3: Project CashFlow at time tt onto basis function at time tt-1
@@ -109,20 +109,22 @@ for tt=N:-1:3;
    SSb2=SSit(:,tt-1);
    XX2=[ones(NSim,1),SSb2,SSb2.^2,SSb2.^3,SSb2.^4,SSb2.^5];
    
-   plot(SSb,XX*BB,'.',SSb,SSb-KC,':',SSb,YY,'*') %plot of (if exercise now value)
-   %plot(SSb2,XX2*BB,'.',SSb2,SSb2-KC,':',SSb2,YYFull,'*') %plot of all
-   legend('Expected Payoff if Wait','Payoff Today if Exercise')
-   xlabel('Stock Price')
-   title('Estimation of Exercise Frontier')
-   pause(.0001)
+   if (mod(tt,100)==0)
+       plot(SSb,XX*BB,'.',SSb,SSb-ConPx(I,tt-1),':',SSb,YY,'*') %plot of (if exercise now value)
+       %plot(SSb2,XX2*BB,'.',SSb2,SSb2-ConPx(:,tt-1),':',SSb2,YYFull,'*') %plot of all
+       legend('Expected Payoff if Wait','Payoff Today if Exercise')
+       xlabel('Stock Price')
+       title('Estimation of Exercise Frontier')
+       pause(.0001)
+   end
    
-   %                                 XX2*BB = Continuation value
-   IStop=find(SSit(:,tt-1)-KC >= max(XX2*BB,0)); %IStop = Index of exercise now
+   %                                            XX2*BB = Continuation value
+   IStop=find(SSit(:,tt-1)-ConPx(:,tt-1) >= max(XX2*BB,0)); %IStop = Index of exercise now
    ICon=setdiff([1:NSim],IStop);               %ICon = Index of no-exercise
    
-   MM(IStop,tt-1)=SSit(IStop,tt-1)-KC;         %Use exercise value for exercise now
-   MM(IStop,tt:N)=zeros(length(IStop),N-tt+1); %Zero out previous exercises
-   MM(ICon,tt-1)=zeros(length(ICon),1);        %Zero out non-exercise, keeping future exercise
+   MM(IStop,tt-1)=SSit(IStop,tt-1)-ConPx(IStop,tt-1);   %Use exercise value for exercise now
+   MM(IStop,tt:N)=zeros(length(IStop),N-tt+1);          %Zero out previous exercises
+   MM(ICon,tt-1)=zeros(length(ICon),1);                 %Zero out non-exercise, keeping future exercise
    
  end
  
