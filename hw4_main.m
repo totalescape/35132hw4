@@ -119,7 +119,7 @@ for tt=N:-1:3;
    end
    
    %                                            XX2*BB = Continuation value
-   IStop=find(SSit(:,tt-1)-ConPx(:,tt-1) >= max(XX2*BB,0)); %IStop = Index of exercise now
+   IStop=find(~isnan(ConPx(:,tt-1)) & SSit(:,tt-1)-ConPx(:,tt-1) >= max(XX2*BB,0)); %IStop = Index of exercise now
    ICon=setdiff([1:NSim],IStop);               %ICon = Index of no-exercise
    
    MM(IStop,tt-1)=SSit(IStop,tt-1)-ConPx(IStop,tt-1);   %Use exercise value for exercise now
