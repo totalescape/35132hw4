@@ -85,10 +85,12 @@ for tt=N:-1:3;
    if tt==N
       %YY - Produces the PV of next period
       YY=(ones(ISize,1)*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N);
+      YYFull=(ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N);
    else
       %YY - Produces the PV of all future periods (should be only 1
       %non-zero)
       YY=sum(((ones(ISize,1)*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N))')';
+      YYFull=sum(((ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N))')';
    end
 
    %Perform regression using in the money data points
@@ -100,7 +102,8 @@ for tt=N:-1:3;
    SSb2=SSit(:,tt-1);
    XX2=[ones(NSim,1),SSb2,SSb2.^2,SSb2.^3,SSb2.^4,SSb2.^5];
    
-   plot(SSb,XX*BB,'.',SSb,SSb-KC,':')
+   plot(SSb,XX*BB,'.',SSb,SSb-KC,':',SSb,YY,'*') %plot of (if exercise now value)
+   %plot(SSb2,XX2*BB,'.',SSb2,SSb2-KC,':',SSb2,YYFull,'*') %plot of all
    legend('Expected Payoff if Wait','Payoff Today if Exercise')
    xlabel('Stock Price')
    title('Estimation of Exercise Frontier')
