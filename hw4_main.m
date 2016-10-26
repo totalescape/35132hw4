@@ -27,7 +27,7 @@ D=.04;
 % Options
 % =======
 
-T=1;	% Time to Maturity
+T=5;	% Time to Maturity
 KP=1.2;	% Strike Price
 
 
