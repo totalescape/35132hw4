@@ -13,22 +13,22 @@ clear all
 % Stock
 % =====
 
-sigma=.3;	% Volatility
-S0=1; 36;
+sigma=0.6656;	% Volatility
+S0=8.15;
 
 % =============
 % Interest rate and Dividend Yield
 % =============
 
 r=.03;
-D=.04;
+D=0.0;
 
 % =======
 % Options
 % =======
 
 T=5;	% Time to Maturity
-KP=1.2;	% Strike Price
+KC=20;	% Strike Price
 
 
 % ===========
@@ -69,7 +69,7 @@ NSim=size(SSit,1);
 %N=N+1;
 
 MM=NaN*ones(NSim,N);
-MM(:,N)=max(KP-SSit(:,N),0);
+MM(:,N)=max(KC-SSit(:,N),0);
 figure
 for tt=N:-1:3; 
    disp('Time to Maturity')
@@ -77,7 +77,7 @@ for tt=N:-1:3;
    
    % Step 1: Select the path in the money at time tt-1
    
-   I=find(KP-SSit(:,tt-1)>0);
+   I=find(KC-SSit(:,tt-1)>0);
    ISize=length(I);
    
    % Step 3: Project CashFlow at time tt onto basis function at time tt-1
@@ -98,17 +98,17 @@ for tt=N:-1:3;
    SSb2=SSit(:,tt-1);
    XX2=[ones(NSim,1),SSb2,SSb2.^2,SSb2.^3,SSb2.^4,SSb2.^5];
    
-   plot(SSb,XX*BB,'.',SSb,KP-SSb,':')
+   plot(SSb,XX*BB,'.',SSb,KC-SSb,':')
    legend('Expected Payoff if Wait','Payoff Today if Exercise')
    xlabel('Stock Price')
    title('Estimation of Exercise Frontier')
    pause(.0001)
    
    
-   IStop=find(KP-SSit(:,tt-1)>=max(XX2*BB,0));
+   IStop=find(KC-SSit(:,tt-1)>=max(XX2*BB,0));
    ICon=setdiff([1:NSim],IStop);
    
-   MM(IStop,tt-1)=KP-SSit(IStop,tt-1);
+   MM(IStop,tt-1)=KC-SSit(IStop,tt-1);
    MM(IStop,tt:N)=zeros(length(IStop),N-tt+1);
    MM(ICon,tt-1)=zeros(length(ICon),1);
    
