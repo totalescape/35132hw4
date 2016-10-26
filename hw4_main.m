@@ -83,18 +83,20 @@ for tt=N:-1:3;
    % Step 3: Project CashFlow at time tt onto basis function at time tt-1
    
    if tt==N
+      %YY - Produces the PV of next period
       YY=(ones(ISize,1)*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N);
-	else
+   else
+      %YY - Produces the PV of all future periods (should be only 1
+      %non-zero)
       YY=sum(((ones(ISize,1)*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N))')';
    end
 
+   %Perform regression using in the money data points
    SSb=SSit(I,tt-1);
    XX=[ones(ISize,1),SSb,SSb.^2,SSb.^3,SSb.^4,SSb.^5];
    BB=inv(XX'*XX)*XX'*YY;
    
-   
-   
-   
+   %Build regression data for later
    SSb2=SSit(:,tt-1);
    XX2=[ones(NSim,1),SSb2,SSb2.^2,SSb2.^3,SSb2.^4,SSb2.^5];
    
@@ -104,17 +106,17 @@ for tt=N:-1:3;
    title('Estimation of Exercise Frontier')
    pause(.0001)
    
+   %                                 XX2*BB = Continuation value
+   IStop=find(SSit(:,tt-1)-KC >= max(XX2*BB,0)); %IStop = Index of exercise now
+   ICon=setdiff([1:NSim],IStop);               %ICon = Index of no-exercise
    
-   IStop=find(SSit(:,tt-1)-KC>=max(XX2*BB,0));
-   ICon=setdiff([1:NSim],IStop);
-   
-   MM(IStop,tt-1)=SSit(IStop,tt-1)-KC;
-   MM(IStop,tt:N)=zeros(length(IStop),N-tt+1);
-   MM(ICon,tt-1)=zeros(length(ICon),1);
+   MM(IStop,tt-1)=SSit(IStop,tt-1)-KC;         %Use exercise value for exercise now
+   MM(IStop,tt:N)=zeros(length(IStop),N-tt+1); %Zero out previous exercises
+   MM(ICon,tt-1)=zeros(length(ICon),1);        %Zero out non-exercise, keeping future exercise
    
  end
  
-  YY=sum(((ones(NSim,1)*exp(-r*[1:N-1]*dt)).*MM(:,2:N))')';
+ YY=sum(((ones(NSim,1)*exp(-r*[1:N-1]*dt)).*MM(:,2:N))')';
 
  Value=mean(YY);
  sterr=std(YY)/sqrt(NSim);
