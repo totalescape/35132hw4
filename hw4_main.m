@@ -48,14 +48,21 @@ dBt=sqrt(dt)*randn(NSim,N);
 St=zeros(NSim,N);
 St(:,1)=S0*ones(NSim,1);
 
-   for t=2:N;t
-      St(:,t)=St(:,t-1).*exp((r-D-.5*sigma^2)*dt+sigma*dBt(:,t)); 
-      
-      
-      
-   end
-   
-   SSit=St;   
+% Conversion px
+ConPx = NaN*zeros(NSim,N);
+for t=2:N
+  St(:,t)=St(:,t-1).*exp((r-D-.5*sigma^2)*dt+sigma*dBt(:,t));
+  
+  if (t*dt < 3/12)
+      ConPx(:,t) = NaN.*ones(NSim,1);
+  elseif (t*dt < 0.5)
+      ConPx(:,t) = min(10.*ones(NSim,1),20);
+  else
+      ConPx(:,t) = min(min(St(:,t-1:-1:t-22)')',20.*ones(NSim,1));
+  end
+end
+
+SSit=St;   
    
 
 NSim=size(SSit,1);
