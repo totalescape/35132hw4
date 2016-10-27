@@ -20,7 +20,7 @@ S0=7.85;
 % Interest rate and Dividend Yield
 % =============
 
-r=log(1.058);
+r=.0;
 D=0.0;
 
 % =======
@@ -37,10 +37,9 @@ KC=20;	% Strike Price
 
 
 
-dt =1/252;
+dt = 1/(252*2);%1/252;
 N=T/dt;
 NSim=100000;
-
 
 % Implementation
 % ==============
@@ -53,13 +52,7 @@ ConPx = NaN*zeros(NSim,N);
 for t=2:N
   St(:,t)=St(:,t-1).*exp((r-D-.5*sigma^2)*dt+sigma*dBt(:,t));
   
-  if (t*dt < 3/12)
-      ConPx(:,t) = NaN.*ones(NSim,1);
-  elseif (t*dt < 0.5)
-      ConPx(:,t) = min(10.*ones(NSim,1),20);
-  else
-      ConPx(:,t) = min(min(St(:,t-1:-1:t-22)')',20.*ones(NSim,1));
-  end
+
 end
 
 SSit=St;   
@@ -84,7 +77,7 @@ for tt=N:-1:3;
    
    % Step 1: Select the path in the money at time tt-1
    
-   I=find(SSit(:,tt-1)-KC>0);
+   I=find(SSit(:,tt-1)-KC >0 | SSit(:,tt)-KC >0);
    ISize=length(I);
    
    % Step 3: Project CashFlow at time tt onto basis function at time tt-1
@@ -92,12 +85,12 @@ for tt=N:-1:3;
    if tt==N
       %YY - Produces the PV of next period
       YY=(ones(ISize,1)*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N);
-      YYFull=(ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N);
+      %YYFull=(ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N);
    else
       %YY - Produces the PV of all future periods (should be only 1
       %non-zero)
-      YY=sum(((ones(ISize,1)*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N))')';
-      YYFull=sum(((ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N))')';
+      YY=sum(((ones(ISize,1).*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N))')';
+      %YYFull=sum(((ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N))')';
    end
 
    %Perform regression using in the money data points
@@ -109,7 +102,7 @@ for tt=N:-1:3;
    SSb2=SSit(:,tt-1);
    XX2=[ones(NSim,1),SSb2,SSb2.^2,SSb2.^3,SSb2.^4,SSb2.^5];
    
-   plot(SSb,XX*BB,'.',SSb,SSb-KC,':',SSb,YY,'*') %plot of (if exercise now value)
+   plot(SSb,XX*BB,'.',SSb,SSb-KC,':'); %,SSb,YY,'*') %plot of (if exercise now value)
    %plot(SSb2,XX2*BB,'.',SSb2,SSb2-KC,':',SSb2,YYFull,'*') %plot of all
    legend('Expected Payoff if Wait','Payoff Today if Exercise')
    xlabel('Stock Price')
@@ -124,6 +117,11 @@ for tt=N:-1:3;
    MM(IStop,tt:N)=zeros(length(IStop),N-tt+1); %Zero out previous exercises
    MM(ICon,tt-1)=zeros(length(ICon),1);        %Zero out non-exercise, keeping future exercise
    
+   ErrorI = find(sum(MM(:,tt-1:N)')'<max(SSit(:,N)-KC,0));
+   if (sum(ErrorI)>0) 
+       temp = max(XX2*BB,0);
+        [sum(MM(ErrorI,tt-1:N)')' max(SSit(ErrorI,N)-KC,0) SSit(ErrorI,tt-1)-KC temp(ErrorI) ErrorI SSit(ErrorI,tt-1) SSit(ErrorI,tt)]
+   end
  end
  
  YY=sum(((ones(NSim,1)*exp(-r*[1:N-1]*dt)).*MM(:,2:N))')';
