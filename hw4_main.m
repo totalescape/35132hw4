@@ -1,6 +1,6 @@
 % TN 11: American Options via Monte Carlo Simulations
 % ===================================================
-close all
+%close all
 clear all
 
 %tic % starting the clock timer
@@ -13,8 +13,8 @@ clear all
 % Stock
 % =====
 
-sigma=0.6656;	% Volatility
-S0=8.15;
+sigma=.3;	% Volatility
+S0=1;
 
 % =============
 % Interest rate and Dividend Yield
@@ -27,8 +27,8 @@ D=0.0;
 % Options
 % =======
 
-T=5;	% Time to Maturity
-KC=20;	% Strike Price
+T=1;	% Time to Maturity
+KC=0.8;	% Strike Price
 
 
 % ===========
@@ -119,7 +119,13 @@ for tt=N:-1:3;
  Value=mean(YY);
  sterr=std(YY)/sqrt(NSim);
  
- disp('Value of American Put Option')
+ EuroValue=mean(exp(-r*T).*max(SSit(:,N)-KC,0));
+ 
+ disp('BS Value')
+ disp(Bsc(S0, KC, r, D, sigma, T))
+ disp('Value of American Call Option')
  disp(Value)
  disp('St. Error')
  disp(sterr)
+ disp('Value of Euro Call Option')
+ disp(Value)
