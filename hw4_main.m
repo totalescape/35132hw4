@@ -13,14 +13,14 @@ clear all
 % Stock
 % =====
 
-sigma=0.6656;	% Volatility
-S0=8.15;
+sigma=0.73;	% Volatility
+S0=7.85;
 
 % =============
 % Interest rate and Dividend Yield
 % =============
 
-r=.03;
+r=log(1.058);
 D=0.0;
 
 % =======
@@ -127,6 +127,8 @@ for tt=N:-1:3;
  end
  
  YY=sum(((ones(NSim,1)*exp(-r*[1:N-1]*dt)).*MM(:,2:N))')';
+ 
+ EuroValue = mean(exp(-r*T).*max(SSit(:,N)-KC,0))
 
  Value=mean(YY);
  sterr=std(YY)/sqrt(NSim);
@@ -135,3 +137,5 @@ for tt=N:-1:3;
  disp(Value)
  disp('St. Error')
  disp(sterr)
+ disp('Black')
+ disp(Bsc(S0,KC,r,D,sigma,T))
