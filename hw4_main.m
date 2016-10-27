@@ -37,7 +37,7 @@ KC=0.8;	% Strike Price
 
 
 
-dt =1/50;
+dt =1/250;
 N=T/dt;
 NSim=20000;
 
@@ -70,7 +70,7 @@ NSim=size(SSit,1);
 
 MM=NaN*ones(NSim,N);
 MM(:,N)=max(SSit(:,N)-KC,0);
-figure
+figure(1)
 for tt=N:-1:3; 
    disp('Time to Maturity')
    disp(1-tt/N)
