@@ -76,9 +76,6 @@ for t=2:N
 end
 
 
-
-
-
 SSit=St;   
    
 
@@ -157,7 +154,10 @@ for tt=N:-1:3;
  Value=mean(YY);
  sterr=std(YY)/sqrt(NSim);
  
+ ValueEuro=mean(exp(-r*T).*SSit(:,N).*Ntn(:,N));
 
+ disp('Value of Euro')
+ disp(ValueEuro)
  disp('Value of Structure')
  disp(Value)
  disp('St. Error')
