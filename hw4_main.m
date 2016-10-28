@@ -40,7 +40,7 @@ T=5;	% Time to Maturity
 dt =1/252;
 N=T/dt;
 NSim=10000;
-
+dta = (T/(N-1)); %fix stupid issues
 
 % Implementation
 % ==============
@@ -50,17 +50,34 @@ St(:,1)=S0*ones(NSim,1);
 
 % Conversion px
 ConPx = NaN*zeros(NSim,N);
+Ntn = NaN*zeros(NSim,N);
+
+% Accural factor, use floor if step
+Base = 1000;
+Acc = 1.06.^(((0:N-1)*dta));
+Ntn(:,1) = (Base/10).*ones(NSim,1); %Expresses number of stocks that can be converted
+
 for t=2:N
   St(:,t)=St(:,t-1).*exp((r-D-.5*sigma^2)*dt+sigma*dBt(:,t));
   
-  if (t*dt < 3/12)
+  if (t*dt < 4/12)
       ConPx(:,t) = NaN.*ones(NSim,1);
-  elseif (t*dt < 0.5)
+  elseif (t*dt < 7/12)
       ConPx(:,t) = min(10.*ones(NSim,1),20);
   else
-      ConPx(:,t) = min(min(St(:,t-1:-1:t-22)')',20.*ones(NSim,1));
+      dis = 1 - min(floor(t*dt*12),15)/100;
+      ConPx(:,t) = min(min(St(:,t-1:-1:t-22)')' .* dis,20.*ones(NSim,1));
   end
+  
+  if (t*dt >= 4/12)
+    Ntn(:,t) = Base*Acc(t) ./ ConPx(:,t);
+  end
+  
 end
+
+
+
+
 
 SSit=St;   
    
@@ -86,18 +103,20 @@ for tt=N:-1:3;
    
    I=find(SSit(:,tt-1)-ConPx(:,tt-1)>0);
    ISize=length(I);
+   disp('%ITM')
+   disp(ISize/NSim);
    
    % Step 3: Project CashFlow at time tt onto basis function at time tt-1
    
    if tt==N
       %YY - Produces the PV of next period
       YY=(ones(ISize,1)*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N);
-      YYFull=(ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N);
+      %YYFull=(ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N);
    else
       %YY - Produces the PV of all future periods (should be only 1
       %non-zero)
       YY=sum(((ones(ISize,1)*exp(-r*[1:N-tt+1]*dt)).*MM(I,tt:N))')';
-      YYFull=sum(((ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N))')';
+      %YYFull=sum(((ones(NSim,1)*exp(-r*[1:N-tt+1]*dt)).*MM(:,tt:N))')';
    end
 
    %Perform regression using in the money data points
@@ -110,7 +129,7 @@ for tt=N:-1:3;
    XX2=[ones(NSim,1),SSb2,SSb2.^2,SSb2.^3,SSb2.^4,SSb2.^5];
    
    if (mod(tt,100)==0)
-       plot(SSb,XX*BB,'.',SSb,SSb-ConPx(I,tt-1),':',SSb,YY,'*') %plot of (if exercise now value)
+       plot(SSb,XX*BB,'.',SSb,SSb-ConPx(I,tt-1),':');%,SSb,YY,'*') %plot of (if exercise now value)
        %plot(SSb2,XX2*BB,'.',SSb2,SSb2-ConPx(:,tt-1),':',SSb2,YYFull,'*') %plot of all
        legend('Expected Payoff if Wait','Payoff Today if Exercise')
        xlabel('Stock Price')
@@ -133,7 +152,11 @@ for tt=N:-1:3;
  Value=mean(YY);
  sterr=std(YY)/sqrt(NSim);
  
- disp('Value of American Put Option')
+ disp('Value of BS Call Option')
+ disp(Bsc(S0,20,r,0.0,sigma,T))
+ disp('Value of American Call Option')
  disp(Value)
  disp('St. Error')
  disp(sterr)
+ 
+ 
