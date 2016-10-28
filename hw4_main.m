@@ -20,7 +20,7 @@ S0=8.15;
 % Interest rate and Dividend Yield
 % =============
 
-r=.03;
+r=.05;
 D=0.0;
 
 % =======
@@ -93,8 +93,8 @@ NSim=size(SSit,1);
 %N=N+1;
 
 MM=NaN*ones(NSim,N);
-MM(:,N)=max(SSit(:,N)-ConPx(:,end),0);
-figure
+MM(:,N)=max(SSit(:,N).*Ntn(:,N),0);
+figure(1)
 for tt=N:-1:3; 
    disp('Time to Maturity')
    disp(1-tt/N)
@@ -121,27 +121,32 @@ for tt=N:-1:3;
 
    %Perform regression using in the money data points
    SSb=SSit(I,tt-1);
-   XX=[ones(ISize,1),SSb,SSb.^2,SSb.^3,SSb.^4,SSb.^5];
+   XX=[ones(ISize,1),SSb,SSb.^2,SSb.^3];
    BB=inv(XX'*XX)*XX'*YY;
    
    %Build regression data for later
    SSb2=SSit(:,tt-1);
-   XX2=[ones(NSim,1),SSb2,SSb2.^2,SSb2.^3,SSb2.^4,SSb2.^5];
+   XX2=[ones(NSim,1),SSb2,SSb2.^2,SSb2.^3];
    
-   if (mod(tt,100)==0)
-       plot(SSb,XX*BB,'.',SSb,SSb-ConPx(I,tt-1),':');%,SSb,YY,'*') %plot of (if exercise now value)
+   %if (mod(tt,100)==0)
+       plot(SSb,XX*BB,'.',SSb,100*(SSb-20),':');%,SSb,YY,'*') %plot of (if exercise now value)
        %plot(SSb2,XX2*BB,'.',SSb2,SSb2-ConPx(:,tt-1),':',SSb2,YYFull,'*') %plot of all
        legend('Expected Payoff if Wait','Payoff Today if Exercise')
        xlabel('Stock Price')
        title('Estimation of Exercise Frontier')
        pause(.0001)
+   %end
+   
+   if (isnan(ConPx(:,tt-1)))
+       MM(:,1:tt-1) = zeros(NSim, tt-1);
+       break
    end
    
    %                                            XX2*BB = Continuation value
-   IStop=find(~isnan(ConPx(:,tt-1)) & SSit(:,tt-1)-ConPx(:,tt-1) >= max(XX2*BB,0)); %IStop = Index of exercise now
+   IStop=find( SSit(:,tt-1).*Ntn(:,tt-1) >= max(XX2*BB,0)); %IStop = Index of exercise now
    ICon=setdiff([1:NSim],IStop);               %ICon = Index of no-exercise
    
-   MM(IStop,tt-1)=SSit(IStop,tt-1)-ConPx(IStop,tt-1);   %Use exercise value for exercise now
+   MM(IStop,tt-1)=SSit(IStop,tt-1).*Ntn(IStop,tt-1);   %Use exercise value for exercise now
    MM(IStop,tt:N)=zeros(length(IStop),N-tt+1);          %Zero out previous exercises
    MM(ICon,tt-1)=zeros(length(ICon),1);                 %Zero out non-exercise, keeping future exercise
    
@@ -152,9 +157,8 @@ for tt=N:-1:3;
  Value=mean(YY);
  sterr=std(YY)/sqrt(NSim);
  
- disp('Value of BS Call Option')
- disp(Bsc(S0,20,r,0.0,sigma,T))
- disp('Value of American Call Option')
+
+ disp('Value of Structure')
  disp(Value)
  disp('St. Error')
  disp(sterr)
